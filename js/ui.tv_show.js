@@ -1,5 +1,6 @@
 ui.tv = {
 	session:{},
+	checkOS : true,
 	show:function(movie_id){
 
 		var data = ui.home.catalog.items[movie_id];
@@ -22,7 +23,7 @@ ui.tv = {
 
 	slider: function(data){
 
-		if($('.slider_' + data.id).length)
+		if($('.tvshow_' + data.id).length)
 			return;
 
 		ui.sliders.close_all();
@@ -56,7 +57,8 @@ ui.tv = {
 		for(var i=0;i<episodes.length;i++){
 
 			var watched = app.history.tv[imdb + '_' + season_id + '_' + i];
-			$('<div onclickcc="ui.tv.events.episode_click(event,this)" data-episode_id="'+i+'" data-episode_num="' + episodes[i].episode + '" class="row episode ' + (watched ? 'watched':'') + '"><span class="episode_num">' + (episodes[i].episode) + '</span> &nbsp; &nbsp; <span class="episode_title">' + episodes[i].title + '</span><div class="pseudo_click_listener"></div></div>').appendTo('#slider_tvshow.tvshow_' + imdb + ' .episodes .scroller_cont')
+			var episodeUrl = app.initParams.seasons && app.initParams.seasons[season_id] && app.initParams.seasons[season_id][episodes[i].episode]? app.initParams.seasons[season_id][episodes[i].episode]: 'javascript:void(0)';
+			$('<div onclickcc="ui.tv.events.episode_click(event,this)" data-episode_id="'+i+'" data-episode_num="' + episodes[i].episode + '" class="row episode ' + (watched ? 'watched':'') + '"><a style="display:block;" href="'+episodeUrl+'"><span class="episode_num">' + (episodes[i].episode) + '</span> &nbsp; &nbsp; <span class="episode_title">' + episodes[i].title + '</span><div class="pseudo_click_listener"></div></a></div>').appendTo('#slider_tvshow.tvshow_' + imdb + ' .episodes .scroller_cont')
 			.click(function(e){
 
 				var el=this;
@@ -100,7 +102,7 @@ ui.tv = {
 
 		});
 
-		var unwatchedEpisode = $('#slider_tvshow .episode.watched').last().next();
+		var unwatchedEpisode = app.initParams.season == season_id && app.initParams.episode > -1? $('#slider_tvshow .episode[data-episode_num="' + app.initParams.episode + '"]').last() :$('#slider_tvshow .episode.watched').last().next();
 		if(unwatchedEpisode.length){
 			unwatchedEpisode.click();
 			ui.tv.episodes_scroller.scrollToElement(unwatchedEpisode[0],null,null,true)
@@ -112,20 +114,15 @@ ui.tv = {
 
 	},
 
-	show_episode:function(season_id, episode_id, episode_number){
+	show_episode:function(season_id, episode_id, episode_number) {
 
 		var
 		imdb				= ui.tv.items[1],
 		episode				= ui.tv.items[0][season_id][episode_id],
-		torrent_selector 	= $('#slider_tvshow.tvshow_' + imdb + ' .torrent_selector .selector_cont'),
-		subtitles_selector	= $('#slider_tvshow.tvshow_' + imdb + ' .subs_selector .selector_cont'),
-		clearSubs 			= function(caption){
-			subtitles_selector.html('<div class="item subtitle"><div class="icon2 lang"></div><div class="caption">' + (caption || locale.translate('subtitledIn')) + '</div></div>');
-		};
+		torrent_selector 	= $('#slider_tvshow.tvshow_' + imdb + ' .torrent_selector .selector_cont');
 
 
 		ui.tv.session = {
-
 			id:				imdb,
 			imdb:			imdb,
 			episode_id: 	episode_id,
@@ -137,25 +134,34 @@ ui.tv = {
 			image:			$('#slider_tvshow .backdrop .img').last().length && $('#slider_tvshow .backdrop .img').last()[0].style.backgroundImage.replace('url(','').replace(/\)$/,'') || ui.home.catalog.items[imdb].poster_big,
 			time:			(new Date).getTime()
 
-		}
-
+		};
+		/*$.get("//www.omdbapi.com/?i="+imdb+"&y=&plot=short&r=json&season="+season_id+"&episode="+episode_number+"",function(response) {
+			if(response && response.imdbID) {
+				ui.tv.session.imdb = response.imdbID;
+			}
+		},'json');*/
 		$('#slider_tvshow .episode_name').html(episode.title);
 		$('#slider_tvshow .episode_number').html( locale.translate('episode') + ' ' + episode_number);
 		$('#slider_tvshow .episode_overview').html(episode.synopsis);
 
+      var title = (ui.tv.session.title.replace(/\s\(\d{4}\)$/,'') + ' season' + ' ' + season_id + ' episode' + ' ' + episode_number + ' ' + episode.title);
+      utils.setMetas({
+         title : utils.titles.itemTitle.replace('{{item_name}}',  ui.tv.session.title),
+         url : '/' + slugify(title)  +'.html?imdb=' + (imdb.replace('tt',"")) + '-' + season_id + '-' + episode_number
+      });
 		torrent_selector.html('');
-		clearSubs();
 
 		if(episode.items instanceof Array && episode.items.length){
 			$('#slider_tvshow.tvshow_' + imdb + ' .watch-btn').show();
 			episode.items.forEach(function(torrent, i){
-
+                torrent.file = location.href.indexOf('os=mac') > -1 && torrent.file ?torrent.file:torrent.file.replace('/','\\');
 				if(i==0)
 					ui.tv.session.torrent = {
 						url: 	torrent.torrent_url,
                   magnet: torrent.torrent_magnet,
 						file:	torrent.file,
-						quality: torrent.quality
+						quality: torrent.quality,
+                        size: torrent.size_bytes
 					}
 
 
@@ -171,7 +177,8 @@ ui.tv = {
 						url: 	torrent.torrent_url,
                   magnet: torrent.torrent_magnet,
 						file:	torrent.file,
-						quality: torrent.quality
+						quality: torrent.quality,
+                        size: torrent.size_bytes
 					}
 				});
 
@@ -185,46 +192,22 @@ ui.tv = {
 
 
 		ui.tv.session.subtitles = [];
-		fetcher.scrappers.torrentsapi_subs(imdb, season_id, episode_id, function(subs){
-
-			if(!subs instanceof Array || !subs.length){
-				clearSubs('No &nbsp;Subtitles');
-				return;
-			}
-
-			ui.tv.session.subtitles = [];
-			var insubs = {};
-			clearSubs();
-
-			for(var i=0;i<subs.length;i++){
-
-				if(!insubs[subs[i][1]]){
-
-					insubs[subs[i][1]] = true;
-
-					var selected = subs[i][1] == app.config.locale.preferredSubs;
-					if(selected)
-						ui.tv.session.subtitles_locale = subs[i][1];
-
-					$('<div data-locale="' + subs[i][1] + '" class="item subtitle ' + (selected ? 'activated':'') + '"><div class="caption"><img src="css/images/flags/' + (resource.lang2code[subs[i][1]] || 'xx') + '.png" class="flag" onload="this.style.visibility=\'visible\'">' + (locale.langs[subs[i][1]] || subs[i][2]) + '</div></div>')[(selected ? 'prependTo' : 'appendTo')](subtitles_selector)
-					.click(function(){
-								$('.item.subtitle.activated').removeClass('activated')
-								$(this).addClass('activated');
-								app.config.set({locale: {preferredSubs: $(this).data('locale')}})
-								ui.tv.session.subtitles_locale = $(this).data('locale');
-					})
+		ui.tv.session.eimdb = null;
 
 
-					ui.tv.session.subtitles.push(subs[i]);
-				}
-			}
-		})
 
 	},
 
 	watch:function(e){
+        if(utils.currentOS !== 'windows') {
+            return;
+        }
+		if(window.deviceNotSupport) {
+			$('#deviceNotSupported').show();
+			return;
+		}
 		Mousetrap.pause();
-		torrentsTime.pt.setup.vpnShowed = false;
+		// torrentsTime.pt.setup.vpnShowed = false;
 		app.torrent.get(this.session);
 
 		app.history.add([this.session]);
@@ -281,16 +264,16 @@ ui.tv = {
 						seasons_cont.html('<div class="scroller_cont"></div>');
 
 						for(var i in items){
-							seasons_cont.children('.scroller_cont').append('<div class="row season" data-season="'+i+'" onclick="ui.tv.set_season(' + i + ')">' + locale.translate('season') + ' ' + i + '</div>');
+							var seasonUrl = app.initParams.seasons && app.initParams.seasons[i]? app.initParams.seasons[i].url: 'javascript:void(0)';
+							seasons_cont.children('.scroller_cont').append('<div class="row season" data-season="'+i+'" onclick="ui.tv.set_season(' + i + ')"><a style="display:block;" href="'+seasonUrl+'">' + locale.translate('season') + ' ' + i + '</a></div>');
 
-
-							if(!seasons_counter && !ui.tv.last_episode)
+							if(app.initParams.season == i || (app.initParams.season == -1 && !seasons_counter && !ui.tv.last_episode))
 								ui.tv.set_season(i)
 
 							seasons_counter++;
 						}
 
-						if(ui.tv.last_episode)
+						if(app.initParams.season == -1 && ui.tv.last_episode)
 							ui.tv.set_season(ui.tv.last_episode[0])
 
 
@@ -330,13 +313,34 @@ ui.tv = {
 						if(data.tmdbid)
 							callback()
 						else{
+                            var title_clean = "";
+                            if(data.title.match(/\(\d{4}\)$/)) {
+                                title_clean = data.title.replace(/\s\(\d{4}\)$/,'');
+                            } else {
+                                title_clean = data.title;
+                            }
 							ui.tv.infoXHR = $.get(app.config.api_keys.tmdb_url + 'search/tv?query=' + encodeURIComponent(data.title) + '&api_key=' + app.config.api_keys.tmdb,function(json){
 
 								if(json && json.results instanceof Array && json.results.length){
-									data.tmdbid = json.results[0].id;
-									ui.tv.tmdbid = json.results[0].id;
-									callback();
-								}
+                                    var suggestedName = false;
+                                    for(var i = 0; i < json.results.length;i++) {
+                                        if(title_clean == json.results[i].name) {
+                                            suggestedName = true;
+                                            data.tmdbid = json.results[i].id;
+                                            ui.tv.tmdbid = json.results[i].id;
+                                            break;
+                                        }
+                                    }
+                                    if(!suggestedName) {
+                                        data.tmdbid = json.results[0].id;
+                                        ui.tv.tmdbid = json.results[0].id;
+                                    }
+                                    callback();
+								}else {
+                                    //fallback data;
+
+                                    callback();
+                                }
 
 
 							}, 'json');
@@ -344,6 +348,10 @@ ui.tv = {
 					},
 
 					load_info:function(callback){
+                        if(typeof data.tmdbid == 'undefined') {
+                            callback();
+                            return;
+                        }
 						ui.tv.infoXHR = $.get(app.config.api_keys.tmdb_url + 'tv/' + data.tmdbid + '?api_key=' + app.config.api_keys.tmdb,function(json){
 							if(json){
 								data.year = json.first_air_date.substr(0,4) + '-' + json.last_air_date.substr(0,4);
@@ -352,6 +360,8 @@ ui.tv = {
 								data.genre = json.genres instanceof Array ? (json.genres[0] && json.genres[0].name || '') : '';
 								data.poster_big = app.config.api_keys.tmdb_src + 'w154' + json.poster_path;
 								data.backdrop = app.config.api_keys.tmdb_src + 'w1280' + json.backdrop_path;
+
+								ui.tv.session.image = data.backdrop;
 							}
 							callback();
 
@@ -360,9 +370,16 @@ ui.tv = {
 
 					display_info:function(){
 
-						$('.slider.tvshow_' + data.imdb + ' .synopsis').html(data.synopsis).addClass('fadein');
+						$('.slider.tvshow_' + data.imdb + ' .synopsis').html("<div class=\"reviews-btn\">READ REVIEWS</div><div class='synopsisText'></div>").addClass('fadein');
+						$('.slider.tvshow_' + data.imdb + ' .synopsis .reviews-btn').click(function () {
+							hostApp.openBrowser(app.config.urls.imdb.format(data.imdb))
+						});
+						$('.slider.tvshow_' + data.imdb + ' .synopsis .synopsisText').html(data.synopsis);
 						$('.slider.tvshow_' + data.imdb + ' .title_info.genre').html(data.genre);
 						$('.slider.tvshow_' + data.imdb + ' .title_info .year').html(data.year);
+						$('.slider.tvshow_' + data.imdb + ' .title_info.stars').attr('title', data.voteAverage + ' / 10').click(function(){
+							hostApp.openBrowser(app.config.urls.imdb.format(data.imdb))
+						}).children('span').css({cursor:"pointer"})
 
 						if(data.runtime)
 							$('.slider.tvshow_' + data.imdb + ' .title_info .runtime').html(data.runtime).parent('.runtime_cont').show();
@@ -424,7 +441,7 @@ ui.tv = {
 
 			load_images:function(data){
 
-				return;
+				return; //TODO check is that correct works after uncomment;
 
 				if(ui.movies.imgsXHR && typeof ui.movies.imgsXHR.abort == 'function')
 					ui.movies.imgsXHR.abort();
@@ -444,11 +461,11 @@ ui.tv = {
 								if(json.posters[i].height>1080)
 
 									if(json.posters[i].iso_639_1==locale.language){
-										poster_img = 'http://image.tmdb.org/t/p/w780/' + json.posters[i].file_path;
+										poster_img = '//image.tmdb.org/t/p/w780/' + json.posters[i].file_path;
 										break;
 									}
 									else if(!gotFirstEnPoster && json.posters[i].iso_639_1=='en'){
-										poster_img = 'http://image.tmdb.org/t/p/w780/' + json.posters[i].file_path;
+										poster_img = '//image.tmdb.org/t/p/w780/' + json.posters[i].file_path;
 										gotFirstEnPoster=true;
 									}
 
@@ -488,9 +505,9 @@ ui.tv = {
 									}
 
 									var bd = json.backdrops[i];
-									if(bd.width==1920){
+									if(bd.width >= 1920){
 										var
-										src = 'http://image.tmdb.org/t/p/w' + bd.width + bd.file_path,
+										src = '//image.tmdb.org/t/p/w' + bd.width + bd.file_path,
 										img = new Image;
 										img.onload = function(){
 
@@ -502,6 +519,9 @@ ui.tv = {
 												setTimeout(function(){bd_handler(++i)},6750);
 											},10)
 
+										}
+										img.onerror = function() {
+											setTimeout(function(){bd_handler(++i)},100);
 										}
 										img.src=src
 

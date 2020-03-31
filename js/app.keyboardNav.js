@@ -16,7 +16,7 @@ app.keyboardNav = {
 
 
 
-		Mousetrap.bind('right',function(){
+		Mousetrap.bind('right',function(e){
 
 			switch(app.state){
 				case 'mainWindow':
@@ -61,10 +61,12 @@ app.keyboardNav = {
 				break;
 			}
 
+         e.preventDefault();
+         return false;
 		})
 
 
-		Mousetrap.bind('left',function(){
+		Mousetrap.bind('left',function(e){
 
 			switch(app.state){
 				case 'mainWindow':
@@ -96,9 +98,11 @@ app.keyboardNav = {
 				break;
 			}
 
+         e.preventDefault();
+         return false;
 		})
 
-		Mousetrap.bind('down',function(){
+		Mousetrap.bind('down',function(e){
 
 			switch(app.state){
 				case 'mainWindow':
@@ -173,9 +177,11 @@ app.keyboardNav = {
 				break;
 			}
 
+         e.preventDefault();
+         return false;
 		})
 
-		Mousetrap.bind('up',function(){
+		Mousetrap.bind('up',function(e){
 
 			switch(app.state){
 				case 'mainWindow':
@@ -251,10 +257,12 @@ app.keyboardNav = {
 				break;
 			}
 
+         e.preventDefault();
+         return false;
 		})
 
 
-		Mousetrap.bind(['esc','backspace'],function(){
+		Mousetrap.bind(['esc','backspace'],function(e){
 
 			switch(app.state){
 				case 'mainWindow':
@@ -273,12 +281,16 @@ app.keyboardNav = {
 				break;
 				default:
 
+               
 					if($('body.loading #loading_wrapper .close').length)
 						$('body.loading #loading_wrapper .close').click();
 
 					else if($('.slider').length)
 						$('.slider').last().children('.close').click();
 
+
+               e.preventDefault();
+               return false;
 				break;
 			}
 
@@ -319,7 +331,7 @@ app.keyboardNav = {
 
 		})
 
-		Mousetrap.bind(['enter','space'],function(){
+		Mousetrap.bind(['enter','space'],function(e){
 			switch(app.state){
 				case 'mainWindow':
 					if($('body.sidemenu_open').length){
@@ -364,6 +376,9 @@ app.keyboardNav = {
 					$('#slider_vpn .vpn_button').click();
 				break;
 			}
+
+         e.preventDefault();
+         return false;
 		})
 
 		Mousetrap.bind(['f5'],function(){location.reload();})

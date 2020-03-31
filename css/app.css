@@ -49,7 +49,7 @@ font-style: normal;
 	cursor:default;
 }
 
-
+@media only screen and (min-width: 3840px) {body{zoom:236%}}
 html,body{
 	height:100%;
 	margin:0;
@@ -74,7 +74,7 @@ a img{border:0}
 ul{padding-left:0;margin-left:0;list-style-type:none}
 ul>li{position:relative;float:left;}
 
-body.disableAnimation * {
+body.disable_animations * {
  /*CSS transitions*/
  -o-transition-property: none !important;
  -moz-transition-property: none !important;
@@ -99,7 +99,25 @@ body.disableAnimation * {
 #html_resource{
 	display:none;
 }
+.hidden {
+	display:none;
+}
 
+.gloss{
+	position:absolute;
+	width:25%;
+	height:150%;
+	top:-25%;
+	left:0;
+	background: linear-gradient(to left,  rgba(255,255,255,0.28) 0%,rgba(255,255,255,0.20) 20%,rgba(255,255,255,0.1) 45%,rgba(255,255,255,0) 100%);
+	pointer-events:none;
+	z-index:999999;
+	-webkit-transform: rotate(18deg);
+}
+
+body.hideGlare .gloss{
+	display:none;
+}
 
 
 .incont{
@@ -114,6 +132,7 @@ body.disableAnimation * {
 	opacity:0.92;
 	z-index:15;
 	position:absolute;
+	-webkit-box-shadow: 0px 7px 25px 10px rgba(0,0,0,1);
 	box-shadow: 0px 7px 25px 10px rgba(0,0,0,1);
 
 }
@@ -124,7 +143,7 @@ body.disableAnimation * {
 	position:absolute;
 	right:5px;
 	top:6px;
-	z-index:18
+	z-index:999999
 
 }
 
@@ -501,7 +520,7 @@ body.sidemenu_open #side_menu{
 }
 
 #sortby_box select option{
-	appearance:none;
+	-webkit-appearance:none;
 	font-size:11px;
 	background:#000;
 	line-height:15px;
@@ -589,7 +608,7 @@ body.sidemenu_open #side_menu{
 	float:left;
 	overflow:hidden;
 	box-sizing:border-box;
-	border:1px rgba(0,0,0,0) solid;
+	border:2px rgba(0,0,0,0) solid;
 	position:relative;
 	overflow:hidden;
 
@@ -612,7 +631,7 @@ body.sidemenu_open #side_menu{
 	width:100%;
 	height:100%;
 	vertical-align:top;
-	filter: saturate(100%);
+	-webkit-filter: saturate(100%);
 	transition-property: all;
 	transition-duration: 1s;
 	transition-timing-function: linear;
@@ -621,7 +640,7 @@ body.sidemenu_open #side_menu{
 
 #movies_catalog .movie.khover img{
 
-	filter: saturate(250%);
+	-webkit-filter: saturate(250%);
 	transition-duration: 0.14s;
 	border-radius:4px;
 }
@@ -871,8 +890,7 @@ body.loading .slider .backdrop_img .img{
 
 #slider_movie .poster_img{
 	position:absolute;
-	filter: saturate(116%);
-	-moz-mask-image:-moz-gradient(linear, right top, left top, color-stop(1,rgba(0,0,0,1)), color-stop(0.5,rgba(0,0,0,1)), color-stop(0,rgba(0,0,0,0)));
+	-webkit-filter: saturate(116%);
 	-webkit-mask-image:-webkit-gradient(linear, right top, left top, color-stop(1,rgba(0,0,0,1)), color-stop(0.5,rgba(0,0,0,1)), color-stop(0,rgba(0,0,0,0)));
 	opacity:0;
 	pointer-events: none;
@@ -915,9 +933,12 @@ body.loading .slider .backdrop_img .img{
 	height:60px;
 	position:absolute;
 	bottom:20px;
-	left:36%;
 	z-index:9;
 	width:63%;
+	/*TODO fixes bug on small resolutions*/
+	/*left:36%;*/
+	min-width: 600px;
+	right:0;
 }
 
 .slider .toolbox_content .sep{
@@ -1059,6 +1080,7 @@ body.loading .slider .backdrop_img .img{
 	overflow:hidden;
 	left:0;
 	bottom:0;
+	z-index:2;
 
 	transition-property: all;
 	transition-duration: 0.14s;
@@ -1131,6 +1153,70 @@ body.loading .slider .backdrop_img .img{
 	width:110px;
 }
 
+.slider .dubbed_selector{
+   /*
+      width:110px;
+      margin-top:7px;
+   */
+   position: absolute;
+   bottom: 80px;
+   left: 0;
+   /*height: 50px;*/
+   display: table;
+}
+.dubbed_selector .item {
+   opacity:0;
+   bottom: -50px;
+   color: rgba(255,255,255,0.5);
+   fill: rgba(255,255,255,0.5);
+   display: table-cell;
+   vertical-align: bottom;
+   width: 80px;
+   padding: 0 10px;
+   cursor:pointer;
+   text-align: center;
+   position: relative;
+   border-right: 1px rgba(255,255,255,0.1) solid;
+   transition: all 0.1s linear;
+   font-size:12px;
+}
+.dubbed_selector .item:last-child {
+   border-right: 1px transparent solid;
+}
+.dubbed_selector * {
+
+   cursor:pointer;
+}
+.dubbed_selector .item.activated, .dubbed_selector .item:hover {
+   color:#FFF;
+   fill:#FFF;
+
+}
+.dubbed_selector .item.activated .item_name, .dubbed_selector .item:hover .item_name {
+   border-bottom:2px solid #FFF;
+}
+.dubbed_selector .item .item_name:first-child {
+   white-space: normal;
+}
+.dubbed_selector .item svg {
+   width: 25px;
+   transition: all 0.1s linear;
+   position: absolute;
+   top: -12px;
+   left: 50%;
+   margin-left: -10%;
+}
+.dubbed_selector .item:hover svg, .dubbed_selector .item.activated svg {
+   top:-15px;
+}
+.dubbed_selector .item .item_name {
+   padding: 0 10px;
+   white-space: nowrap;
+   padding-bottom: 5px;
+   border-bottom:2px solid transparent;
+   cursor:pointer;
+   transition: all 0.3s linear;
+}
 .subtitle .flag{
 	width:16px;
 	height:16px;
@@ -1141,8 +1227,13 @@ body.loading .slider .backdrop_img .img{
 }
 
 .slider .tools{
-	/*padding-top:15px;   TODO changed to 5 because we comment subtitles selector*/
-	padding-top:5px;
+
+
+
+   margin-top: 13px;
+/*	position:absolute;
+	top:-50px;
+	left:0;*/
 }
 
 .slider .tools .icon2, #slider_movie .tools .icon2{
@@ -1151,7 +1242,7 @@ body.loading .slider .backdrop_img .img{
 
 .slider .tools .tool{
 	float:left;
-	margin-right:11px;
+	margin-right:15px;
 	cursor:pointer !important;
 }
 
@@ -1167,6 +1258,7 @@ body.loading .slider .backdrop_img .img{
 	display:none;
 }
 
+
 .slider .tools .tool.trailer:before{
 	font-family:icomoon;
 	content:"\e614";
@@ -1180,9 +1272,11 @@ body.loading .slider .backdrop_img .img{
 
 #slider_movie .content{
 	width:calc(67% - 30px);
+	min-width: 500px; /*TODO check what it must be.*/
 	position:absolute;
 	top:calc(50% - 200px);
-	left:36%;
+	/*left:36%;*/
+	right: 0; /*TODO changed from left margin to right side */
 	height:50%;
 }
 
@@ -1229,7 +1323,7 @@ body.loading .slider .backdrop_img .img{
 #slider_movie .actors img{
 	height:75px;
 	border:2px rgba(255,255,255,0.4) solid;
-	filter: saturate(30%);
+	-webkit-filter: saturate(30%);
 	opacity:0.5;
 	border-radius:4px;
 
@@ -1488,7 +1582,7 @@ body.loading .slider .backdrop_img .img{
 	z-index:20;
 	left:0;
 	top:0;
-	background: #000;
+	background: radial-gradient(ellipse at center,rgba(0,0,0,0.9) 30px, rgba(0,0,0,0.8) 130px,rgba(0,0,0,0.4) 60%, rgba(0,0,0,0) 100%);
 	display:none;
 }
 
@@ -1497,7 +1591,7 @@ body.loading .slider .backdrop_img .img{
 }
 
 #loading_wrapper.activated .bars_cont{
-	animation: rotating 4.3s linear infinite;
+	-webkit-animation: rotating 4.3s linear infinite;
 }
 
 
@@ -1713,8 +1807,8 @@ body.loading .slider .backdrop_img .img{
 	background-repeat:no-repeat;
 	background-position:center center;
 	background-size:cover;
-	filter:saturate(100%);
-	transition-property: filter;
+	-webkit-filter:saturate(100%);
+	transition-property: -webkit-filter;
 	transition-duration: 0.74s;
 	transition-timing-function: ease-out;
 	box-sizing:border-box;
@@ -1722,7 +1816,7 @@ body.loading .slider .backdrop_img .img{
 
 #history_cont .item:hover .image{
 	transition-duration: 0.14s;
-	filter:saturate(200%);
+	-webkit-filter:saturate(200%);
 
 }
 
@@ -1977,7 +2071,6 @@ input[type='range'] {
 	margin:10px 10px 0;
 	width:80px;
 	-webkit-appearance: none;
-	appearance: none;
 	border-radius: 5px;
 	box-shadow: inset 0 0 5px #333;
 	background-color: #747474;
@@ -1987,7 +2080,6 @@ input[type='range'] {
 
 input[type='range']::-webkit-slider-thumb {
 	-webkit-appearance: none !important;
-	appearance: none !important;
 	border-radius: 20px;
 	background-color: #fff;
 	box-shadow: 0 0 5px rgba(0,0,0,1);
@@ -2425,4 +2517,160 @@ margin-top:60px;
 .myButton:active {
 	position:relative;
 	top:1px;
+}
+
+
+
+#loading_wrapper .vpnmsg{
+
+	width: 500px;
+    height: 130px;
+    background: rgba(0,0,0,0.66) ;
+    border-radius: 5px;
+    position: absolute;
+    left: 50%;
+    top: 35px;
+    margin-left: -250px;
+    color:#fff;
+    border: 1px rgba(0,0,0,0.1) solid;
+
+}
+
+#loading_wrapper .vpnmsg button{
+	color: #fff;
+	text-decoration: none;
+	margin-right: 10px;
+	border-radius: 5px;
+	box-shadow: 0 1px 0px rgba(255,255,255,0.1) inset, 0 0px 1px rgba(0,0,0,0.7);
+	background: rgba(255,255,255,0.12);
+	border: 1px solid #141414;
+	padding: 5px 15px;
+	text-shadow: 2px 2px rgba(0,0,0,0.25);
+	margin-top:13px;
+	cursor:pointer;
+	font-weight:bold;
+}
+
+#loading_wrapper .vpnmsg button:active, #loading_wrapper .vpnmsg button:focus {
+	box-shadow: 0 0 0 transparent inset;
+}
+
+#loading_wrapper .vpnmsg button:hover{
+	background: rgba(0,0,0,0.4);
+}
+
+@-webkit-keyframes alert{0%{opacity: 1} 50%{opacity:0} 100%{opacity:1}}
+@keyframes alert{0%{opacity: 1} 50%{opacity:0} 100%{opacity:1}}
+
+/* fix close botton on download*/
+body.loading .slider .close{display:none;}
+#loading_wrapper .close, .slider .close{text-shadow: 2px 2px 15px rgba(0,0,0,0.88);}
+
+
+
+
+
+/* Torrent Selection slider styles */
+.left-side {
+	bottom:30px;
+	position:absolute;
+	left:30px;
+}
+.right-side {
+	bottom:30px;
+	position:absolute;
+	right:30px;
+}
+#slider_torrentSelection {
+	padding: 100px 30px 30px 30px;
+	color:#FFF;
+	box-sizing:border-box;
+}
+#slider_torrentSelection h2 {
+	text-align:center;
+}
+#slider_torrentSelection .watch-btn {
+	max-width:200px;
+}
+
+.file_list_wrapper {
+	left:30px;
+	right:30px;
+	top: 140px;
+	position:absolute;
+	bottom: 100px;
+	overflow:auto;
+}
+.file_list_wrapper li {
+	display: block;
+	float:none;
+	box-sizing:border-box;
+	padding:10px;
+	transition:all 0.2s ease;
+	background:rgba(0,0,0,0.6);
+	margin:2px 0;
+}
+.file_list_wrapper li:hover, .file_list_wrapper li.active {
+	background:rgba(255,255,255,0.5);
+	color:#000;
+}
+.file_item-size {
+	float:right;
+}
+.common_glowing_button {
+	border:0;
+	border-radius:4px;
+	padding:20px 35px;
+	background:rgba(255,255,255,0.2);
+	font-size:16px;
+	color:#fff;
+	font-weight:bold;
+	border:1px rgba(255,255,255,0.2) solid;
+	line-height:18px !important;
+	cursor:pointer;
+	text-shadow:2px 2px rgba(0,0,0,0.15);
+}
+
+.common_glowing_button:hover{
+	background:rgba(255,255,255,0.3);
+}
+
+.watch-btn.disabled, .watch-btn.disabled * {
+	text-shadow:none;
+	color:#CCC;
+	cursor:default !important; /* need to fix it, in styles watch-btn - has important too*/
+}
+.common_glowing_button :hover{
+	background:rgba(255,255,255,0.3);
+}
+
+.common_glowing_button span{
+	font-size:10px;
+}
+.reviews-btn{
+
+	padding:10px 5px; font-size:13px;border:1px #fff solid;border-radius:3px;margin: 0 0 25px;width:140px;text-align:center;color: #fff !important;background:rgba(255,255,255,0.3);font-weight: bold;cursor: pointer;
+}
+.reviews-btn:hover{
+
+	background:rgba(255,255,255,0.5)
+}
+/* link to front*/
+.front_link{
+	position: absolute;
+	z-index: 500;
+	color: white;
+	font-size: 10px;
+	opacity: 0.68;
+}
+.front_link a{
+	cursor: pointer;
+}
+.movie_cont .front_link{
+	left: 30px;
+	bottom: 8px;
+ }
+#slider_tvshow .front_link{
+	left: 20px;
+	bottom: 5px;
 }

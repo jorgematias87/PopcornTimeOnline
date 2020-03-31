@@ -28,6 +28,9 @@ var api = {
 
 
         ui.loading_wrapper.change_stats(Math.round(d[0]), 0, 0, 0, msg);
+    },
+    content_test:function (params) {
+        console.info('content_test params:' +params);
     }
 
 }

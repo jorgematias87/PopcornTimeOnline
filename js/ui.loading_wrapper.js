@@ -32,16 +32,6 @@ ui.loading_wrapper = {
 		$('body').addClass('loading');
 
 		$('#loading_wrapper .f')[f ? 'hide' : 'show']()
-
-/*
-		if(!hostApp.vpn_isConnected())
-			$('#loading_wrapper .icon.locked').css('visibility','hidden');
-
-		else
-			$('#loading_wrapper .icon.locked').css('visibility','visible');
-
-
-*/
 	},
 
 	hide: function(native_call){
@@ -59,12 +49,18 @@ ui.loading_wrapper = {
 	change_stats: function(percentage, speed, seeders, peers, msg){
 
 		percentage = Math.round(percentage);
+        var
+            from 	= this.percent;
 		var to	= Math.ceil(percentage/2);
-
+        if(from>to){
+            from=0;
+            $('#loading_wrapper .bar').removeClass('on')
+        }
 		if(to){
 			$('#loading_wrapper .bar').removeClass('on');
 			$('#loading_wrapper .bar').slice(0, to).addClass('on');
 		}
+        this.percent=to;
 		speed = (speed/1024).toFixed(2);
 		if(speed>1024) {
 			speed = (speed/1024).toFixed(2) + ' Mb/s';

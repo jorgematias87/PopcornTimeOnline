@@ -2,7 +2,7 @@ fetcher.scrappers.yts = function(genre, keywords, page, callback){
 
 
 
-		var url = 'http://yts.to/api/list.json?genre=' + genre + '&sort=seeds&limit=50&set=' + ui.home.catalog.page;
+		var url = 'https://yts.ag/api/v2/list_movies.jsonp?genre=' + genre + '&sort=seeds&limit=50&set=' + ui.home.catalog.page;
 
         if (keywords) {
             url += '&keywords=' + keywords;
@@ -18,77 +18,77 @@ fetcher.scrappers.yts = function(genre, keywords, page, callback){
 
 
 
+		url = "https://json2jsonp.com/?url="+encodeURIComponent(url)+"";
+
+
 		$.ajax({
 			url: url,
-			dataType:'json',
+			dataType:'jsonp',
+			jsonp: "callback",
 			timeout:8000,
 			error:function(){callback(false)},
 			success:function(data){
 				var movies = [],
 					memory = {};
 
-				if (data.error || typeof data.MovieList === 'undefined') {
-					callback(false)
+				if (!data || data.status != 'ok' || typeof data.data.movies === 'undefined') {
+					callback(false);
 					return;
 				}
 
-				data.MovieList.forEach(function (movie){
+				data.data.movies.forEach(function (movie){
 					// No imdb, no movie.
-					if( typeof movie.ImdbCode != 'string' || movie.ImdbCode.replace('tt', '') == '' ){ return;}
+					if( typeof movie.imdb_code != 'string' || movie.imdb_code.replace('tt', '') == '' ){ return;}
 
 
-					var torrent = {
+					var torrents = [];
+					for(var i = 0; i<movie.torrents.length; i++) {
 
+						torrents.push({
 							"type": 0,
-							"torrent_url": movie.TorrentUrl,
-							"torrent_seeds": movie.TorrentSeeds,
-							"torrent_peers": movie.TorrentPeers,
+							"torrent_url": movie.torrents[i].url,
+							"torrent_seeds": movie.torrents[i].seeds,
+							"torrent_peers": movie.torrents[i].peers,
 							"file": false,
-							"quality": movie.Quality,
+							"quality": movie.torrents[i].quality,
 							"language": "",
 							"subtitles": "",
-							"size_bytes": movie.SizeByte,
-							"id": movie.TorrentHash
-
+							"size_bytes": movie.torrents[i].size_bytes,
+							"id": movie.torrents[i].hash
+						});
 					}
 
 
-					if(memory[ movie.ImdbCode ]){
 
-						memory[ movie.ImdbCode ].torrents.push(torrent)
-
-
-					}
-					else{
-
-						memory[ movie.ImdbCode ] = {
+						memory[ movie.imdb_code ] = {
 
 
-								id:       	movie.ImdbCode,
-								imdb:       movie.ImdbCode,
-								title:      movie.MovieTitleClean,
-								year:       movie.MovieYear ? movie.MovieYear : '&nbsp;',
+								id:       	movie.imdb_code,
+								imdb:       movie.imdb_code,
+								title:      movie.title_english,
+								year:       movie.year ? movie.year : '&nbsp;',
 								runtime:    "",
 								synopsis:   "",
-								voteAverage:parseFloat(movie.MovieRating),
+								voteAverage:parseFloat(movie.rating),
 
-								poster_small:	movie.CoverImage,
-								poster_big:   	movie.CoverImage.replace('_med','_large'),
-								image: 	 	    movie.CoverImage,
-								bigImage:   	movie.CoverImage.replace('_med','_large'),
+								poster_small:	movie.medium_cover_image,
+								poster_big:   	movie.large_cover_image,
+								image: 	 	    movie.background_image,
+								bigImage:   	movie.background_image_original,
 
-								quality:    movie.Quality,
-								torrents:   [torrent],
+								quality:    torrents[0].quality,
+								torrent:    torrents[0].torrent_url,
+								magnet :    "",
+								torrents:   torrents,
 
-								seeders:    movie.TorrentSeeds,
-								leechers:   movie.TorrentPeers,
+								seeders:    torrents[0].torrent_seeds,
+								leechers:   torrents[0].torrent_peers,
 								trailer:	false,
-								stars:		utils.movie.rateToStars(parseFloat(movie.MovieRating)),
+								stars:		utils.movie.rateToStars(parseFloat(movie.rating)),
 
 						}
 
 
-					}
 
 
 				});

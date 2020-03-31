@@ -47,6 +47,13 @@ var fetcher = {
 
 
 
+         console.info(mode,idx,scrapper_name,keywords);
+         if(keywords != ""  && scrapper_name == "yts") {
+            //after try to search in yts - we will drop _idx to zero.
+            callback("search, don't need call yts", []);
+            fetcher.scrappers[mode][section + '_idx'] = 0;
+            return;
+         }
 			if(typeof(scrapper_name)=='string'){
 
 				var scrapper = fetcher.scrappers[scrapper_name];
@@ -82,42 +89,37 @@ var fetcher = {
 		tv_show:function(id, callback){
 
 			var urls = {
-				imdb: 'http://butter.vodo.net/popcorn?imdb=',
-				anime: 'http://butter.vodo.net/popcorn?imdb='
-			}
-
-			var fallback_urls = {
-				imdb: 'http://butter.vodo.net/popcorn?imdb=',
-				anime: 'http://butter.vodo.net/popcorn?imdb='
-			}
+				imdb: '//api.apiumadomain.com/show?imdb=',
+				anime: '//api-anime.apidomain.info/show?imdb='
+			};
 
 
 			$.get(urls[app.config.fetcher.mode] + id, function(json){
-				if(json){
+				if(json || (typeof data.MovieList !== 'undefined' && data.MovieList.length != 0)){
 					callback(0, json);
 				}
 				else {
-						$.get(fallback_urls[app.config.fetcher.mode] + id, function(json){
-							if(json){
-								callback(0, json);
-							} else {
-								callback('error_t4p_tv_not_responding');
-							}
-						},'json');
-
-				}
+               $.get(urls[app.config.fetcher.mode] + id + '&nc=1', function(json){
+                  if(json){
+                     callback(0, json);
+                  } else {
+                     callback('error_t4p_tv_not_responding');
+                  }
+               },'json');
+            }
 
 
 			},'json')
-				.fail(function() {
-					$.get(fallback_urls[app.config.fetcher.mode] + id, function(json){
-						if(json){
-							callback(0, json);
-						} else {
-							callback('error_t4p_tv_not_responding');
-						}
-					},'json');
-				});
+            .fail(function() {
+               $.get(urls[app.config.fetcher.mode] + id+ '&nc=1', function(json){
+                  if(json){
+                     callback(0, json);
+                  } else {
+                     callback('error_t4p_tv_not_responding');
+                  }
+               },'json');
+            });
+
 		},
 
 

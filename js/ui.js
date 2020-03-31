@@ -2,9 +2,12 @@ var ui = {
 
 	construct:function(){
 
+
 		this.home.catalog.set_sizes();
 		this.home.catalog.show();
 
+
+		$('body')[ ( app.config.hostApp.hideGlare ? 'addClass' : 'removeClass' ) ]('hideGlare');
 
 		$('#titlebar_buttons div').click(function(){
 			hostApp.sendWinAction($(this).attr('id'));
@@ -104,22 +107,29 @@ var ui = {
 					window.autocompleteXhr.abort();
 					$('#autocomplete').html('').removeClass('visible')
 
-				window.autocompleteXhr = $.get('http://yts.to/api/list.json?keywords=' + encodeURIComponent($(this).val()) +' &limit=5&sort=seeds',function(json){
-					if(json.MovieList && json.MovieList.length){
-						$('#autocomplete').html('').addClass('visible');
-						var suggests = {}
+				var url = "https://json2jsonp.com/?url="+encodeURIComponent('https://yts.ag/api/v2/list_movies.jsonp?keywords=' + encodeURIComponent($(this).val()) +' &limit=5&sort=seeds')+"";
+				window.autocompleteXhr = $.ajax({
+						url: url,
+						dataType:'jsonp',
+						jsonp: "callback",
+						timeout:8000,
+						success:function(json){
+							if(json.data && json.data.movies && json.data.movies.length){
+								$('#autocomplete').html('').addClass('visible');
+								var suggests = {}
 
-						json.MovieList.forEach(function(movie){
-							if(movie.MovieTitleClean){
-								suggests[movie.MovieTitleClean] = movie.ImdbCode;
+								json.data.movies.forEach(function(movie){
+									if(movie.title_english){
+										suggests[movie.title_english] = movie.imdb_code;
+									}
+								})
+
+								for(var title in suggests){
+									$('#autocomplete').append('<div onmouseover="$(this).addClass(\'khover\')" onmouseout="$(this).removeClass(\'khover\')" onclick="$(\'#search_input\').val(\'' + title.replace(/'/g,'') + '\');$(\'#search_input\').data(\'imdb\',\'' + suggests[title] + '\');ui.home.catalog.show()">' + title + '</div>')
+								}
 							}
-						})
-
-						for(var title in suggests){
-							$('#autocomplete').append('<div onmouseover="$(this).addClass(\'khover\')" onmouseout="$(this).removeClass(\'khover\')" onclick="$(\'#search_input\').val(\'' + title.replace(/'/g,'') + '\');$(\'#search_input\').data(\'imdb\',\'' + suggests[title] + '\');ui.home.catalog.show()">' + title + '</div>')
 						}
-					}
-				},'json')
+					});
 			}
 		});
 
@@ -171,6 +181,7 @@ var ui = {
 			$('#mode_box .activated').removeClass('activated');
 			$(this).addClass('activated');
 			ui.home.catalog.show();
+
 		})
 
 		if(!app.config.hostApp.isVPN){
@@ -189,9 +200,11 @@ var ui = {
 					app.config.set({ui:{coverScale: scale/100 + 1}});
 				}
 
-				var bw	= $('body').width();
+				// var bw	= $('body').width(); //TODO old version of window width, not at all take full real width;
+				var bw	= $(document).width();
+
 				ui.home.catalog.numItemsInRow	= Math.floor(bw / (app.config.ui.coverWidth * app.config.ui.coverScale));
-				ui.home.catalog.item_width 		= bw / ui.home.catalog.numItemsInRow - 1;
+				ui.home.catalog.item_width 		= bw / ui.home.catalog.numItemsInRow; // TODO removed -1 need to check how works
 				ui.home.catalog.item_height 	= ui.home.catalog.item_width / 0.66;
 
 				$('#movies_catalog .movie').css({width:ui.home.catalog.item_width+'px', height:ui.home.catalog.item_height+'px'});
@@ -207,11 +220,8 @@ var ui = {
 			},
 			show:function(page){
 
-				if(!page) {
-
-					ui.home.catalog.items = {};
+				if(!page)
 					ui.home.catalog.page=1;
-				}
 				else
 					ui.home.catalog.page=page;
 
@@ -237,6 +247,19 @@ var ui = {
 				}
 
 				ui.home.catalog.section = section;
+            if(keywords !== "") {
+               console.log('%c search next string:', 'color: orange; font-weight: bold;',keywords);
+               if(typeof hostApp !== 'undefined' && hostApp.sendEvent) {
+                  console.log('%c call GA function with search string!', 'color: green; font-weight: bold;');
+                  hostApp.sendEvent(JSON.stringify(
+                     {
+                        "eventCategory" : "Application",
+                        "eventAction" : "search",
+                        "eventLabel" : keywords
+                     }
+                  ))
+               }
+            }
 				fetcher.fetch.items(section, genre, keywords, function(err, items){
 
 					if(err || !(items instanceof Array)){
@@ -325,6 +348,7 @@ var ui = {
 				},
 				html = utils.tokenizer(tokens, document.getElementById('movie_cover_html').innerHTML);
 
+
 				if(!ui.home.catalog.items[movie.imdb.toString()])
 					ui.home.catalog.items[movie.imdb.toString()] = movie;
 
@@ -386,9 +410,7 @@ var ui = {
 			app.state='aboutPage';
 
 			var
-			version = location.href.match(/version=([0-9\.]+)/),
-			ver = (version && version[1] || '') + (location.href.match(/version=([0-9\.]+)a/) ? ' Alpha' : ''),
-			html = utils.tokenizer({"version": ver}, $('#about_page_html').html()),
+			html = utils.tokenizer({"version": (window.version?window.version :'0.0.0')}, $('#about_page_html').html()),
 			slider = new ui.slider('about', 'fadein');
 
 			slider.el.append(html);
@@ -447,6 +469,10 @@ var ui = {
 					var css = positions[0][1];
 					css.opacity=0;
 					slider.fadeOut(function(){$(this).remove()})
+               utils.setMetas({
+                  title : utils.titles.common,
+                  url : '/'
+               });
 
 
 					if(typeof this.destruct == 'function')
@@ -494,12 +520,8 @@ var ui = {
 				$('.slider .torrents .torrent_option:first-child').addClass('activated')
 			});
 
-
-			//(new Image).src="http://butter.vodo.net/popcorn?id="+id+"&v=" + vote_id;
-			ga('send', 'pageview', '/reports/'+id+'/'+vote_id);
-
+			(new Image).src="//api.apiumadomain.com/vote?id="+id+"&v=" + vote_id;
 		}
-
 	},
 	trailer:{
 		show:function(url){
@@ -517,8 +539,6 @@ var ui = {
 
 
 		watch_btn_click:function(e){
-
-
 			ui.loading_wrapper.show();
 
 			var
@@ -531,7 +551,9 @@ var ui = {
 		},
 
 		window_resize:function(){
-			ui.home.catalog.set_sizes();
+         if(app.config.ui) {
+            ui.home.catalog.set_sizes();
+         }
 		}
 
 	},

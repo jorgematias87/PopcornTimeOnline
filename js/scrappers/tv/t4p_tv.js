@@ -1,16 +1,12 @@
 fetcher.scrappers.t4p_tv = function(genre, keywords, page, callback, fallback){
 
-	var domain =  'http://butter.vodo.net/popcorn';
-	if(fallback) {
-		domain = 'http://butter.vodo.net/popcorn';
-	}
 
 
 		if(genre=='all')
 			genre = !1;
 
 
-		var url = ''+domain+'?cb='+Math.random()+'&sort=' + app.config.fetcher.sortBy + '&page=' + ui.home.catalog.page;
+		var url = '//api.apiumadomain.com/shows?cb='+Math.random()+'&sort=' + app.config.fetcher.sortBy + '&page=' + ui.home.catalog.page + (!!fallback ? '&nc=1' : '');
 
         if (keywords) {
             url += '&keywords=' + keywords;
@@ -23,12 +19,11 @@ fetcher.scrappers.t4p_tv = function(genre, keywords, page, callback, fallback){
         if (page && page.toString().match(/\d+/)) {
            url += '&set=' + page;
         }
-		url = 'https://json2jsonp.com/?url='+encodeURIComponent(url)+'';
+
 		$.ajax({
 			url: url,
-			dataType:'jsonp',
-			jsonpCallback: 'cbfunc',
-			contentType: "application/json",
+			dataType:'json',
+         timeout:9000,
 			error:function(){
 			if(!fallback) {
 				fetcher.scrappers.t4p_tv(genre, keywords, page, callback, true);
@@ -40,52 +35,52 @@ fetcher.scrappers.t4p_tv = function(genre, keywords, page, callback, fallback){
 
 				var movies = [],
 					memory = {};
-				delete data.downloads;
-				if (data.error || typeof data.downloads === 'undefined') {
-					if(!fallback) {
-						fetcher.scrappers.t4p_tv(genre, keywords, page, callback, true);
-					} else {
-						callback(false)
-					}
-					return;
-				}
 
-				data.downloads.forEach(function (movie){
+            if (data.error || typeof data.MovieList === 'undefined' || data.MovieList.length == 0) {
+               if(!fallback) {
+                  fetcher.scrappers.t4p_tv(genre, keywords, page, callback, true);
+               } else {
+                  callback(false)
+               }
+               return;
+            }
+				data.MovieList.forEach(function (movie){
 					// No imdb, no movie.
 
-					if( typeof movie.ImdbCode != 'string' || movie.ImdbCode.replace('tt', '') == '' ){ return;}
+					if( typeof movie.imdb != 'string' || movie.imdb.replace('tt', '') == '' ){ return;}
 
 			try{
 
 					// Temporary object
 					var movieModel = {
-						id:       movie.ImdbCode,
-						imdb:       movie.ImdbCode,
-						title:      movie.MovieTitleClean,
-						year:       movie.MovieYear ? movie.MovieYear : '&nbsp;',
-						runtime:    movie.Runtime,
-						synopsis:   "",
-						imdb_rating: parseFloat(movie.MovieRating),
+						id:       movie.imdb,
+						imdb:       movie.imdb,
+						title:      movie.title,
+						year:       movie.year ? movie.year : '&nbsp;',
+						runtime:    movie.runtime,
+						synopsis:   movie.description ? movie.description : "",
+						imdb_rating: parseFloat(movie.rating),
 
-						poster_small:	movie.CoverImage,
-						poster_big:		movie.CoverImage,
-						seeders:    movie.TorrentSeeds,
-						leechers:   movie.TorrentPeers,
-						trailer:	movie.trailer ? 'http://www.youtube.com/embed/' + movie.trailer + '?autoplay=1': false,
-						stars:		utils.movie.rateToStars(parseFloat(movie.MovieRating))
+						poster_small:	movie.poster_med? movie.poster_med.replace('http:',''):movie.poster_med,
+						poster_big:		movie.poster_big? movie.poster_big.replace('http:',''):movie.poster_big,
+						seeders:    movie.torrent_seeds,
+						leechers:   movie.torrent_peers,
+						trailer:	movie.trailer ? 'https://www.youtube.com/embed/' + movie.trailer + '?autoplay=1': false,
+						stars:		utils.movie.rateToStars(parseFloat(movie.rating)),
+
 					};
 
 
 
-					var stored = memory[movie.ImdbCode];
+					var stored = memory[movie.imdb];
 
 					// Create it on memory map if it doesn't exist.
 					if (typeof stored === 'undefined') {
-						stored = memory[movie.ImdbCode] = movieModel;
+						stored = memory[movie.imdb] = movieModel;
 					}
 
 					// Push it if not currently on array.
-					if (movies.indexOf(stored) === -1 && !ui.home.catalog.items[movie.ImdbCode.toString()]) {
+					if (movies.indexOf(stored) === -1) {
 						movies.push(stored);
 					}
 			}catch(e){ console.log(e.message);}
@@ -93,7 +88,7 @@ fetcher.scrappers.t4p_tv = function(genre, keywords, page, callback, fallback){
 				});
 
 				callback(movies)
-			}
+			},
 		});
 
 }

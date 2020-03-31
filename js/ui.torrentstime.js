@@ -2,6 +2,7 @@ ui.torrentsTime = {
 
 	isVisible: false,
 	isInstallingHide : false,
+	isInstalledFromVPN : false,
 	show:function(){
 		ui.torrentsTime.isVisible = true;
 		$('.torrentsTime, #ttbar').addClass('visible');
@@ -11,7 +12,7 @@ ui.torrentsTime = {
 	hide:function(){
 		ui.torrentsTime.isVisible = false;
 		$('.torrentsTime, #ttbar').removeClass('visible');
-		torrentsTime.init({id:"pt", source:null});
+		// torrentsTime.init({id:"pt", source:null});
 		Mousetrap.unpause();
 	},
 	downloadHandler : function() {
@@ -42,7 +43,7 @@ ui.torrentsTime = {
 	},
 	checkPluginSupportFF : function() {
 		setTimeout(function(){
-			if(torrentsTime.pt.setup.poster && !torrentsTime.pt.wrapper.firstChild.style.background){
+			if(torrentsTime.pt && torrentsTime.pt.setup.poster && !torrentsTime.pt.wrapper.firstChild.style.background){
 				torrentsTime.pt.wrapper.firstChild.style.background='#000 url('+torrentsTime.pt.setup.poster[0]+') no-repeat center center';
 				torrentsTime.pt.wrapper.firstChild.style.backgroundSize='cover';
 			}
@@ -56,8 +57,9 @@ ui.torrentsTime = {
 					arrowimg.setAttribute('id','_tt_arrowimg_ff_unblock');
 
 					torrentsTime.functions.initialized = function(){
-						var arrowimg = document.getElementById('_tt_arrowimg_ff_unblock');
-						arrowimg.parentNode.removeChild(arrowimg);
+						$(document.querySelectorAll('#_tt_arrowimg_ff_unblock')).remove();
+/*						var arrowimg = document.getElementById('_tt_arrowimg_ff_unblock');
+						arrowimg.parentNode.removeChild(arrowimg);*/
 					}
 				}
 			},1000)
@@ -75,11 +77,15 @@ ui.torrentsTime = {
 				clearInterval(interval);
 				return;
 			}
+			if(percent >= 100) {
+				percent = 100;
+			}
 			ui.loading_wrapper.change_stats(percent,0,0,0, "Installing... Please wait.");
 			percent = percent + (Math.floor(Math.random() * 3) + 1  );
 		},3000);
 	},
 	hideInstallingWrapper : function() {
+		console.info("DEBUG>>>>>>>installing wrapper hide");
 		//ui.loading_wrapper.hide(1);
 		ui.torrentsTime.checkPluginSupportFF();
 	}

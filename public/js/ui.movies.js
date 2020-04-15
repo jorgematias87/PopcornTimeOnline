@@ -105,13 +105,14 @@ ui.movies = {
 		if(torrents_data instanceof Array && torrents_data.length){
 			$('#slider_movie.movie_' + data.imdb + ' .watch-btn').show();
          torrents_data.forEach(function(torrent, i){
-             torrent.file = location.href.indexOf('os=mac') > -1 && torrent.file ?torrent.file:torrent.file.replace('/','\\');
+			 torrent.file = location.href.indexOf('os=mac') > -1 && torrent.file ?torrent.file:torrent.file.replace('/','\\');
 
              if(i==0)
 					ui.movies.session.torrent = {
 						url: 	torrent.torrent_url,
-                  magnet: torrent.torrent_magnet,
-                  file:	torrent.file,
+						magnet: torrent.torrent_magnet,
+						hash: torrent.id,
+                  		file:	torrent.file,
 						quality: torrent.quality,
                         size: torrent.size_bytes
 					}
@@ -130,8 +131,9 @@ ui.movies = {
 
 					ui.movies.session.torrent = {
 						url: 	torrent.torrent_url,
-                  magnet: torrent.torrent_magnet,
-                  file:	torrent.file,
+						magnet: torrent.torrent_magnet,
+						hash: torrent.id,
+						file:	torrent.file,
 						quality: torrent.quality,
                         size: torrent.size_bytes
 					};

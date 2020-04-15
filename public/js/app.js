@@ -6,41 +6,17 @@ hostApp = {
 	},
 
 	getTorrent: function(session){
-/*
-		torrentsTime.setup.vpnAlert = app.config.hostApp.vpnAlert!='off';
-		torrentsTime.pt.setup.source = session.torrent.magnet || session.torrent.url;
-		torrentsTime.pt.setup.file = session.torrent.file;
-		torrentsTime.setup.source = session.torrent.magnet || session.torrent.url;
-		torrentsTime.setup.file = session.torrent.file;
-		torrentsTime.setup.imdbid = session.imdb;
-		if(typeof session.season_id != 'undefined') {
-            torrentsTime.setup.season = session.season_id;
-		} else {
+		var torrentId = session.torrent.hash
 
-            torrentsTime.setup.season = null;
-		}
-		if(typeof session.episode_number != 'undefined') {
-            torrentsTime.setup.episode = session.episode_number;
-		} else {
+		$('video').attr('src', api.url + '/stream/' + torrentId);
 
-            torrentsTime.setup.episode = null;
-        }
-
-		if(!torrentsTime.setup.isInstalled){
-			$('#downloadTorrentsTime').show();
-			hostApp.downloadInitialized = true;
-		}
-		else{
-			ui.loading_wrapper.show();
-			torrentsTime.pt.start();
-		}
-		*/
-
-        ui.loading_wrapper.show();
+		ui.loading_wrapper.show();
+		api.checkStats();
 	},
 
 
 	cancelTorrent: function(){
+		api.clearStatsTimer();
 		// torrentsTime.init({id:"pt", source:null});
 	}
 
@@ -85,7 +61,6 @@ app = {
 			app.state = 'mainWindow';
 			app.readInitParams();
 			app.config.init();
-         ui.vpn_page.alert.init();
 			app.config.init();
 			locale.construct(function(){
 				app.favs.init();
@@ -98,7 +73,6 @@ app = {
 			app.setConfig();
             app.subscribeToHostEvents();
 			app.applyState();
-            app.sw.checkInstall();
 		}
 		catch(e){
 			console.error(e);
@@ -373,7 +347,6 @@ if (!String.prototype.format) {
 }
 window.onresize = function(){
 	ui.events.window_resize();
-    ui.vpn_page.alert.window_resized();
 }
 
 window.onload = function(){

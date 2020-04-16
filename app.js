@@ -55,6 +55,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use('/', require('./routes/index'));
 app.use('/video', require('./routes/video'));
+app.use('/subtitles', require('./routes/subtitles'));
 
 //////////////////////////////////////////////////////////////////////////////
 

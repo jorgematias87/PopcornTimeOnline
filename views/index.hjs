@@ -188,7 +188,7 @@
         <div class="peers f"><span class="val"></span> &nbsp; <span style="font-family:opensansbold">Peers</span></div>
         <div class="speed f"><span style="font-family:opensansbold">Speed</span> &nbsp; <span class="val"></span></div>
         <div class="msg"></div>
-		<video src="" controls autoplay></video>
+		<video class="video-player" src="" controls autoplay></video>
     </div>
 </div>
 

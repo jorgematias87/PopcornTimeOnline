@@ -2674,3 +2674,9 @@ body.loading .slider .close{display:none;}
 	left: 20px;
 	bottom: 5px;
 }
+
+.video-player {
+	width: 100%;
+	height: 100%;
+	background: #000;
+}

@@ -8,7 +8,7 @@ hostApp = {
 	getTorrent: function(session){
 		var torrentId = session.torrent.hash
 
-		$('video').attr('src', api.url + '/stream/' + torrentId);
+		$('video').attr('src', api.url + '/video/stream/' + torrentId);
 
 		ui.loading_wrapper.show();
 		api.checkStats();

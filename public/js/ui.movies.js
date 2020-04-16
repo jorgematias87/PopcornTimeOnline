@@ -26,7 +26,8 @@ ui.movies = {
 		};
         fetcher.scrappers.t4p_movie_torrents(movie_id,function(torrent_info) {
             console.log(torrent_info);
-            $.extend(data,torrent_info);
+			$.extend(data,torrent_info);
+			ui.movies.get_subs(data);
             ui.movies.set_torrents(data);
             ui.movies.construct(data);
         });
@@ -176,6 +177,56 @@ ui.movies = {
 			$('#slider_movie.movie_' + data.imdb + ' .watch-btn').hide();
 		}
 
+	},
+
+	get_subs:function(data){
+
+		var subtitles_selector	= $('#slider_movie.movie_' + data.imdb + ' .subs_selector .selector_cont'),
+		clearSubs = function(caption){
+			subtitles_selector.html('<div class="item subtitle"><div class="icon2 lang"></div><div class="caption">' + (caption || locale.translate('subtitledIn')) + '</div></div>');
+		};
+
+		ui.movies.session.subtitles = [];
+		clearSubs();
+
+      fetcher.scrappers.ysubs(data.imdb,function(subs) {
+         var subsList = [];
+         for(var i = 0; i< subs.length; i++) {
+            subsList.push(subs[i]);
+         }
+
+         if(!subsList instanceof Array || !subsList.length){
+			clearSubs('No &nbsp;Subtitles');
+			return;
+		 }
+
+		 ui.movies.session.subtitles = [];
+		 var insubs = {};
+		 clearSubs();
+
+		 for(var i=0;i<subsList.length;i++){
+
+			if(!insubs[subsList[i][1]]){
+
+			   insubs[subsList[i][1]] = true;
+			   var selected = subsList[i][1] == app.config.locale.preferredSubs;
+
+			   if(selected)
+				  ui.movies.session.subtitles_locale = subsList[i][1];
+
+			   $('<div data-locale="' + subsList[i][1] + '" class="item subtitle ' + (selected ? 'activated':'') + '"><div class="caption"><img src="css/images/flags/' + (resource.lang2code[subsList[i][1]] || 'xx') + '.png" class="flag" onload="this.style.visibility=\'visible\'">' + (locale.langs[subsList[i][1]] || subsList[i][2]) + '</div></div>')[(selected ? 'prependTo' : 'appendTo')](subtitles_selector)
+				  .click(function(){
+					 $('.item.subtitle.activated').removeClass('activated')
+					 $(this).addClass('activated');
+					 app.config.set({locale: {preferredSubs: $(this).data('locale')}});
+					 ui.tv.session.subtitles_locale = $(this).data('locale');
+				  });
+
+
+			   ui.movies.session.subtitles.push(subsList[i]);
+			}
+		 }
+      });
 	},
 
 	construct:function(data){

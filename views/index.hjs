@@ -55,14 +55,15 @@
     <script src="js/scrappers/movies/anime.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/scrappers/tv/t4p_tv.js" type="text/javascript" charset="utf-8"></script>
     <script src="js/scrappers/tv/anime.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/scrappers/subtitles/ysubs.js" type="text/javascript" charset="utf-8"></script>
 	<script>
 		$(function() {
 			let statsTimer = null;
-			api.url = "{{base_url}}/video";
+			api.url = "{{base_url}}";
 
 			api.checkStats = function check_for_client_stats() {
 				statsTimer = setTimeout(function() {
-					$.get(api.url + '/stats', function(obj) {
+					$.get(api.url + '/video/stats', function(obj) {
 						app.torrent.updateInfo(obj.progress,obj.downloadSpeed,0,0, 'Loading');
 					});
 					api.checkStats();
@@ -254,10 +255,10 @@
                 <div class="sep" style="color:rgba(255,255,255,0.7);">
 
 
-                    <!--<div class="selector subs_selector">
+                    <div class="selector subs_selector">
                        <div class="selector_cont" onmouseleave="$(this).children('.activated').insertBefore($(this).children('.item').first());this.scrollTop=0"></div>
                        <div class="icon2 down2"></div>
-                    </div>-->
+                    </div>
 
                     <div class="dubbed_selector">
 
@@ -346,10 +347,10 @@
                         </div>
                         <div class="sep">
 
-                            <!--<div class="selector subs_selector">
+                            <div class="selector subs_selector">
                                <div class="selector_cont" onmouseleave="$(this).children('.activated').insertBefore($(this).children('.item').first());this.scrollTop=0"></div>
                                <div class="icon2 down2"></div>
-                            </div>-->
+                            </div>
 
 
                             <div class="selector torrent_selector">
